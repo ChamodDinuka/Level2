@@ -1,6 +1,11 @@
+@import '~antd/dist/antd.css';
 .App {
   text-align: center;
 }
+.ant-page-header {
+  background-color:cadetblue;
+}
+
 
 .App-logo {
   height: 40vmin;
@@ -22,6 +27,24 @@
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+.login-form{
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+}
+form#basic {
+  border:cadetblue;
+  border-style: solid;
+  border-radius: 20px;
+  padding: 20px;
+  min-width: 55%;
+}
+button#login {
+  float: right;
 }
 
 .App-link {
