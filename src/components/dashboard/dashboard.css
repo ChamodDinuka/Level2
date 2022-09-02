@@ -1,0 +1,28 @@
+.ant-layout-sider {
+    background: cadetblue;
+    border-top-style: solid;
+    border-color: white;
+}
+li#side {
+    list-style: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    cursor: pointer;
+    padding-left: 20px;
+}
+li#side:hover{
+    background:darkcyan;
+    color: white;
+}
+.ant-layout.ant-layout-has-sider {
+    flex-direction: row;
+    min-height: 100vh;
+}
+ul {
+    padding-left: 0px;
+}
+.client_table{
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}

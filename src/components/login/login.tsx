@@ -1,15 +1,19 @@
 import React from 'react'
 import { Button, Form, Input, Col } from 'antd';
 import '../../App.css'
+import {useNavigate} from 'react-router-dom'
 
 function Login() {
+    const navigate = useNavigate();
     const onFinish = (values: any) => {
         console.log('Success:', values);
+        navigate("dashboard");
     };
 
     const onFinishFailed = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
     };
+    
     return (
         <div className="login-form">
             <Form
