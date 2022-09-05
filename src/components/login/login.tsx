@@ -1,19 +1,26 @@
 import React from 'react'
-import { Button, Form, Input, Col } from 'antd';
+import { Button, Form, Input, Col, message } from 'antd';
 import '../../App.css'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import axios from "axios";
 
 function Login() {
     const navigate = useNavigate();
-    const onFinish = (values: any) => {
-        console.log('Success:', values);
-        navigate("dashboard");
+    const onFinish = async (values: any) => {
+        await axios.post('http://localhost:5000/login', values)
+            .then(response => {
+                localStorage.setItem('user', JSON.stringify(response.data))
+                navigate("dashboard");
+            }).catch(function (error) {
+                message.error(error.response.data.error)
+            });
+
     };
 
     const onFinishFailed = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
+        message.error("Fill the form")
     };
-    
+
     return (
         <div className="login-form">
             <Form

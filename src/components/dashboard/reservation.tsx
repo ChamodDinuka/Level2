@@ -1,14 +1,15 @@
-import React, { useState,useRef } from 'react'
+import React, { useState,useRef, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { SearchOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
-import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select } from 'antd';
+import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select, message } from 'antd';
 import type { FormInstance } from 'antd/es/form';
 import type { ColumnsType, ColumnType } from 'antd/es/table';
 import type { FilterConfirmProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import { TimePicker } from 'antd';
 import moment from 'moment';
+import axios from "axios";
 import './dashboard.css'
 
 const { confirm } = Modal;
@@ -75,7 +76,20 @@ function Reservation() {
     const searchInput = useRef<InputRef>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const formRef = React.createRef<FormInstance>();
+    const [client, setClient] = useState([]);
+    const [types, setTypes] = useState([]);
 
+    useEffect(() => {
+        getClient();
+    }, [])
+
+    const getClient = async () => {
+        await axios.get('http://localhost:5000/clients')
+            .then(response => {
+                setClient(response.data);
+            }).catch(function (error) {
+            });
+    }
     const showModal = () => {
         setIsModalVisible(true);
     };
@@ -87,8 +101,17 @@ function Reservation() {
     const handleCancel = () => {
         setIsModalVisible(false);
     };
-    const onFinish = (values: any) => {
-        console.log('Success:', values);
+    const onFinish = async (values: any) => {
+        Object.assign(values,{"key":values.email})
+        await axios.post('http://localhost:5000/reservations', values)
+            .then(response => {
+                message.success('Successfully created')
+               // formRef.current!.resetFields();
+                setIsModalVisible(false);
+               // getReservations();
+            }).catch(function (error) {
+                message.error("Fill the form correctly")
+            });
     };
 
     const onFinishFailed = (errorInfo: any) => {

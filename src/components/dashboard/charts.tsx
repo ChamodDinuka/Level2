@@ -4,27 +4,27 @@ import { Pie, Bar } from '@ant-design/plots';
 function Charts() {
     const data = [
         {
-            type: '分类一',
+            type: 'Hair cut',
             value: 27,
         },
         {
-            type: '分类二',
+            type: 'Hair coloring',
             value: 25,
         },
         {
-            type: '分类三',
+            type: 'Tattoo',
             value: 18,
         },
         {
-            type: '分类四',
+            type: 'Nail Polish',
             value: 15,
         },
         {
-            type: '分类五',
+            type: 'Make up',
             value: 10,
         },
         {
-            type: '其他',
+            type: 'Tattoo',
             value: 5,
         },
     ];
