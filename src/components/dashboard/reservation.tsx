@@ -1,7 +1,7 @@
-import React, { useState,useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { SearchOutlined } from '@ant-design/icons';
-import type { InputRef } from 'antd';
+import type { InputRef, Result } from 'antd';
 import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select, message } from 'antd';
 import type { FormInstance } from 'antd/es/form';
 import type { ColumnsType, ColumnType } from 'antd/es/table';
@@ -17,8 +17,10 @@ const { Option } = Select;
 const format = 'HH:mm';
 
 interface DataType {
-    key: string;
-    name: string;
+    key: number;
+    client: string;
+    clientName: string,
+    typeName: string,
     type: string;
     date: string;
     time: string;
@@ -27,48 +29,6 @@ interface DataType {
 
 type DataIndex = keyof DataType;
 
-const data: DataType[] = [
-    {
-        key: '1',
-        name: 'Hair cut',
-        type: 'Tatto',
-        date: '2021-12-12',
-        time: '09:00',
-        status: 'Complated'
-    },
-    {
-        key: '2',
-        name: 'Joe',
-        type: 'Tattoo',
-        date: '2021-12-12',
-        time: '09:30',
-        status: 'Sheduled'
-    },
-    {
-        key: '3',
-        name: 'Jim',
-        type: 'Hair cut',
-        date: '2021-12-13',
-        time: '10:00',
-        status: 'Complated'
-    },
-    {
-        key: '4',
-        name: 'Jim',
-        type: 'Hair coloring',
-        date: '2021-11-12',
-        time: '12:30',
-        status: 'Complated'
-    },
-    {
-        key: '5',
-        name: 'Jim',
-        type: 'Hair coloring',
-        date: '2022-02-12',
-        time: '15:30',
-        status: 'Sheduled'
-    },
-];
 
 function Reservation() {
     const [searchText, setSearchText] = useState('');
@@ -78,9 +38,15 @@ function Reservation() {
     const formRef = React.createRef<FormInstance>();
     const [client, setClient] = useState([]);
     const [types, setTypes] = useState([]);
+    const [selectedReservation, setSelectedReservation] = useState([])
+    const [action, setAction] = useState('create')
+    const [form] = Form.useForm();
+    const [reservations, setReservation] = useState([]);
 
     useEffect(() => {
         getClient();
+        getType();
+        getReservation();
     }, [])
 
     const getClient = async () => {
@@ -90,7 +56,42 @@ function Reservation() {
             }).catch(function (error) {
             });
     }
+    const getType = async () => {
+        await axios.get('http://localhost:5000/types')
+            .then(response => {
+                setTypes(response.data);
+            }).catch(function (error) {
+            });
+    }
+    const getReservation = async () => {
+        await axios.get('http://localhost:5000/reservations')
+            .then(response => {
+                setReservation(response.data);
+            }).catch(function (error) {
+            });
+    }
+    const deleteReservation = async (id: String) => {
+        await axios.delete(`http://localhost:5000/reservations/${id}`)
+            .then(response => {
+                getReservation();
+                message.success('Successfully deleted')
+            }).catch(function (error) {
+            });
+    }
     const showModal = () => {
+        setAction('create')
+        setIsModalVisible(true);
+    };
+    const showModalUpdate = (data: any) => {
+        const temData = {
+            "client": data.client,
+            "type": data.type,
+            "date": moment(data.date),
+            "time": moment(data.time)
+        }
+        setAction('update')
+        setSelectedReservation(data._id)
+        form.setFieldsValue(temData);
         setIsModalVisible(true);
     };
 
@@ -99,23 +100,52 @@ function Reservation() {
     };
 
     const handleCancel = () => {
+        formRef.current!.resetFields();
         setIsModalVisible(false);
     };
     const onFinish = async (values: any) => {
-        Object.assign(values,{"key":values.email})
-        await axios.post('http://localhost:5000/reservations', values)
+        let selectedClient = client.find(result => result['_id'] === values.client)
+        let selectedType = types.find(result => result['_id'] === values.type)
+        let name, type
+
+        if (selectedClient)
+            name = selectedClient['firstName'] + " " + selectedClient['lastName'];
+
+        if (selectedType)
+            type = selectedType['type'];
+
+        Object.assign(values, { "key": reservations.length + 1, "status": "Scheduled", "clientName": name, "typeName": type })
+        console.log(values)
+        values.time = moment(values.time).format('hh:mm')
+        values.date = moment(values.date).format('YYYY-MM-DD')
+
+        if(action === 'create'){
+            await axios.post('http://localhost:5000/reservations', values)
             .then(response => {
                 message.success('Successfully created')
-               // formRef.current!.resetFields();
+                formRef.current!.resetFields();
                 setIsModalVisible(false);
-               // getReservations();
+                getReservation();
             }).catch(function (error) {
                 message.error("Fill the form correctly")
             });
+        }
+
+        if (action === 'update') {
+            await axios.put(`http://localhost:5000/reservations/${selectedReservation}`, values)
+                .then(response => {
+                    message.success('Successfully updated')
+                    formRef.current!.resetFields();
+                    setIsModalVisible(false);
+                    getReservation();
+                }).catch(function (error) {
+                    message.error("Fill the form correctly")
+                });
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
+        message.error("Fill the form correctly")
     };
     const handleSearch = (
         selectedKeys: string[],
@@ -131,19 +161,18 @@ function Reservation() {
         clearFilters();
         setSearchText('');
     };
-    const showDeleteConfirm = () => {
+    const showDeleteConfirm = (data: any) => {
         confirm({
-            title: 'Are you sure delete this resevation',
+            title: 'Are you sure delete this reservation',
             icon: <ExclamationCircleOutlined />,
-            content: 'Some descriptions',
+            content: '',
             okText: 'Yes',
             okType: 'danger',
             cancelText: 'No',
             onOk() {
-                console.log('OK');
+                deleteReservation(data._id)
             },
             onCancel() {
-                console.log('Cancel');
             },
         });
     };
@@ -218,17 +247,17 @@ function Reservation() {
     const columns: ColumnsType<DataType> = [
         {
             title: 'Name',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'clientName',
+            key: 'clientName',
             width: '20%',
-            ...getColumnSearchProps('name'),
-            sorter: (a, b) => a.name.length - b.name.length,
+            ...getColumnSearchProps('client'),
+            sorter: (a, b) => a.client.length - b.client.length,
             sortDirections: ['descend', 'ascend'],
         },
         {
             title: 'Type',
-            dataIndex: 'type',
-            key: 'type',
+            dataIndex: 'typeName',
+            key: 'typeName',
             width: '15%',
             ...getColumnSearchProps('type'),
             sorter: (a, b) => a.type.length - b.type.length,
@@ -258,24 +287,24 @@ function Reservation() {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <Button type="primary" onClick={showModal}>Update</Button>
-                    <Button type="dashed" danger onClick={showDeleteConfirm}>Delete</Button>
+                    <Button type="primary" onClick={() => showModalUpdate(record)}>Update</Button>
+                    <Button type="dashed" danger onClick={() => showDeleteConfirm(record)}>Delete</Button>
                 </Space>
             ),
         },
     ];
     const onGenderChange = (value: string) => {
         switch (value) {
-          case 'male':
-            formRef.current!.setFieldsValue({ note: 'Hi, man!' });
-            return;
-          case 'female':
-            formRef.current!.setFieldsValue({ note: 'Hi, lady!' });
-            return;
-          case 'other':
-            formRef.current!.setFieldsValue({ note: 'Hi there!' });
+            case 'male':
+                formRef.current!.setFieldsValue({ note: 'Hi, man!' });
+                return;
+            case 'female':
+                formRef.current!.setFieldsValue({ note: 'Hi, lady!' });
+                return;
+            case 'other':
+                formRef.current!.setFieldsValue({ note: 'Hi there!' });
         }
-      };
+    };
     return (
         <div className="client_table">
             <Row style={{ "marginBottom": 10, "marginTop": 10 }}>
@@ -288,8 +317,8 @@ function Reservation() {
                     </Button>
                 </Col>
             </Row>
-            <Table columns={columns} dataSource={data} />
-            <Modal title="New Client" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
+            <Table columns={columns} dataSource={reservations} />
+            <Modal title={action === 'create' ? "New reservation" : "Update reservation"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
                     labelCol={{ span: 8 }}
@@ -299,10 +328,12 @@ function Reservation() {
                     onFinishFailed={onFinishFailed}
                     autoComplete="off"
                     labelAlign="left"
+                    ref={formRef}
+                    form={form}
                 >
                     <Form.Item
                         label="Name"
-                        name="name"
+                        name="client"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
                         <Select
@@ -310,9 +341,11 @@ function Reservation() {
                             onChange={onGenderChange}
                             allowClear
                         >
-                            <Option value="male">male</Option>
-                            <Option value="female">female</Option>
-                            <Option value="other">other</Option>
+                            {client && client.map((data: any) => {
+                                return (
+                                    <Option value={data._id} key={data._id}>{data.firstName + " " + data.lastName}</Option>
+                                )
+                            })}
                         </Select>
                     </Form.Item>
                     <Form.Item
@@ -325,9 +358,11 @@ function Reservation() {
                             onChange={onGenderChange}
                             allowClear
                         >
-                            <Option value="male">male</Option>
-                            <Option value="female">female</Option>
-                            <Option value="other">other</Option>
+                            {types && types.map((data: any) => {
+                                return (
+                                    <Option value={data._id} key={data._id}>{data.type}</Option>
+                                )
+                            })}
                         </Select>
                     </Form.Item>
 
@@ -343,7 +378,7 @@ function Reservation() {
                         name="time"
                         rules={[{ required: true, message: 'Please input your Time!' }]}
                     >
-                        <TimePicker defaultValue={moment('12:08', format)} format={format} />
+                        <TimePicker allowClear name="time" format={format}/>
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">

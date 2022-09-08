@@ -26,8 +26,10 @@ function Clients() {
     const searchInput = useRef<InputRef>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [client, setClient] = useState([])
+    const [selectedClient, setSelectedClient] = useState([])
     const [action,setAction] = useState('create')
     const formRef = React.createRef<FormInstance>();
+    const [form] = Form.useForm();
 
     useEffect(() => {
         getClient();
@@ -54,6 +56,8 @@ function Clients() {
     };
     const showModalUpdate = (data:any) => {
         setAction('update')
+        setSelectedClient(data._id)
+        form.setFieldsValue(data);
         setIsModalVisible(true);
     };
 
@@ -67,6 +71,7 @@ function Clients() {
     };
     const onFinish = async (values: any) => {
         Object.assign(values,{"key":values.email})
+        if(action === 'create'){
         await axios.post('http://localhost:5000/clients', values)
             .then(response => {
                 message.success('Successfully created')
@@ -76,6 +81,18 @@ function Clients() {
             }).catch(function (error) {
                 message.error(error.response.data.error)
             });
+        }
+        if(action === 'update'){
+            await axios.put(`http://localhost:5000/clients/${selectedClient}`, values)
+                .then(response => {
+                    message.success('Successfully updated')
+                    formRef.current!.resetFields();
+                    setIsModalVisible(false);
+                    getClient();
+                }).catch(function (error) {
+                    message.error(error.response.data.error)
+                });
+            }
     };
 
     const onFinishFailed = (errorInfo: any) => {
@@ -93,7 +110,6 @@ function Clients() {
                 deleteClient(data._id)
             },
             onCancel() {
-                console.log('Cancel');
             },
         });
     };
@@ -250,13 +266,14 @@ function Clients() {
                     autoComplete="off"
                     labelAlign="left"
                     ref={formRef}
+                    form={form}
                 >
                     <Form.Item
                         label="First Name"
                         name="firstName"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
-                        <Input />
+                        <Input/>
                     </Form.Item>
                     <Form.Item
                         label="Last Name"

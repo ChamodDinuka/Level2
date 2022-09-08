@@ -1,14 +1,26 @@
 import React from 'react'
-import { Button, Form, Input, Col } from 'antd';
+import { Button, Form, Input, Col, message } from 'antd';
+import { useNavigate } from 'react-router-dom'
 import '../../App.css'
+import axios from 'axios'
 
 function Registration() {
-    const onFinish = (values: any) => {
-        console.log('Success:', values);
+    const navigate = useNavigate();
+    const onFinish = async (values: any) => {
+        Object.assign(values,{"joinDate":new Date(),"role":'admin'})
+        console.log(values)
+        await axios.post('http://localhost:5000/register', values)
+            .then(response => {
+                localStorage.setItem('user', JSON.stringify(response.data))
+                message.success("Successfully registered")
+                navigate("../dashboard");
+            }).catch(function (error) {
+                message.error(error.response.data.error)
+            });
     };
 
     const onFinishFailed = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
+        message.error("Fill the form")
     };
     return (
         <div className="login-form">
@@ -25,14 +37,14 @@ function Registration() {
                 <Col offset={8} span={8} style={{ "textAlign": "center" }}><h3>Sign Up</h3></Col>
                 <Form.Item
                     label="First Name"
-                    name="first_name"
+                    name="firstName"
                     rules={[{ required: true, message: 'Please input your First Name!'}]}
                 >
                     <Input />
                 </Form.Item>
                 <Form.Item
                     label="Last Name"
-                    name="last_name"
+                    name="lastName"
                     rules={[{ required: true, message: 'Please input your Last Name!'}]}
                 >
                     <Input />
@@ -54,8 +66,17 @@ function Registration() {
                 </Form.Item>
                 <Form.Item
                     label="Confirm Password"
-                    name="confirm_password"
-                    rules={[{ required: true, message: 'Please check your password!' }]}
+                    name="confirmPassword"
+                    hasFeedback
+                    dependencies={['password']}
+                    rules={[{ required: true, message: 'Please check your password!' },({ getFieldValue }) => ({
+                        validator(rule, value) {
+                          if (!value || getFieldValue('password') === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject('The two passwords that you entered do not match!');
+                        },
+                      }),]}
                 >
                     <Input.Password />
                 </Form.Item>
