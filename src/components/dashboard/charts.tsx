@@ -3,34 +3,9 @@ import { Pie, Bar } from '@ant-design/plots';
 import axios from 'axios'
 
 function Charts() {
-    const [pieData,setPieData] = useState([])
-    const [barData,setBarData] = useState([])
-    // const data = [
-    //     {
-    //         type: 'Hair cut',
-    //         value: 27,
-    //     },
-    //     {
-    //         type: 'Hair coloring',
-    //         value: 25,
-    //     },
-    //     {
-    //         type: 'Tattoo',
-    //         value: 18,
-    //     },
-    //     {
-    //         type: 'Nail Polish',
-    //         value: 15,
-    //     },
-    //     {
-    //         type: 'Make up',
-    //         value: 10,
-    //     },
-    //     {
-    //         type: 'Tattoo',
-    //         value: 5,
-    //     },
-    // ];
+    const [pieData, setPieData] = useState([])
+    const [barData, setBarData] = useState([])
+
     const dataBar = [
         {
             label: 'Mon.',
@@ -83,10 +58,10 @@ function Charts() {
             value: 100,
         },
     ];
-    useEffect(()=>{
+    useEffect(() => {
         getData();
-    },[])
-    const getData=async()=>{
+    }, [])
+    const getData = async () => {
         await axios.get('http://localhost:5000/pie')
             .then(response => {
                 setPieData(response.data);
@@ -94,42 +69,21 @@ function Charts() {
             }).catch(function (error) {
             });
     }
-    // const pie = {
-    //     appendPadding: 10,
-    //     data : pieData,
-    //     angleField: 'value',
-    //     colorField: 'type',
-    //     radius: 0.9,
-    //     label: {
-    //         type: 'inner',
-    //         offset: '-30%',
-    //         content: (percent:any) => `${(percent * 100).toFixed(0)}%`,
-    //         style: {
-    //             fontSize: 14,
-    //             textAlign: 'center',
-    //         },
-    //     },
-    //     interactions: [
-    //         {
-    //             type: 'element-active',
-    //         },
-    //     ],
-    // };
     const pie = {
         appendPadding: 10,
-        data :pieData,
+        data: pieData,
         angleField: 'value',
         colorField: 'type',
         radius: 0.8,
         label: {
-          type: 'outer',
+            type: 'outer',
         },
         interactions: [
-          {
-            type: 'element-active'
-          },
+            {
+                type: 'element-active'
+            },
         ],
-      };
+    };
     const bar = {
         appendPadding: 10,
         data: dataBar,

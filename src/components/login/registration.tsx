@@ -1,22 +1,42 @@
 import React from 'react'
 import { Button, Form, Input, Col, message } from 'antd';
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import '../../App.css'
 import axios from 'axios'
+import moment from 'moment';
 
 function Registration() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
+
     const onFinish = async (values: any) => {
-        Object.assign(values,{"joinDate":new Date(),"role":'admin'})
-        console.log(values)
-        await axios.post('http://localhost:5000/register', values)
-            .then(response => {
-                localStorage.setItem('user', JSON.stringify(response.data))
-                message.success("Successfully registered")
-                navigate("../dashboard");
-            }).catch(function (error) {
-                message.error(error.response.data.error)
-            });
+        let token = searchParams.get("token")
+        let tokenEmail;
+        if (token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            tokenEmail = JSON.parse(jsonPayload).data.email
+
+            if (values.email === tokenEmail) {
+                Object.assign(values, { "joinDate": moment(new Date()).format('YYYY-MM-DD'), "role": 'admin', "key":values.email})
+                console.log(values)
+                await axios.post('http://localhost:5000/register', values)
+                    .then(response => {
+                        localStorage.setItem('user', JSON.stringify(response.data))
+                        message.success("Successfully registered")
+                        navigate("../dashboard");
+                    }).catch(function (error) {
+                        message.error(error.response.data.error)
+                    });
+            } else {
+                message.error("This email not the requested email by admin")
+            }
+        } else {
+            message.error("You need a token to create account")
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {
@@ -38,14 +58,14 @@ function Registration() {
                 <Form.Item
                     label="First Name"
                     name="firstName"
-                    rules={[{ required: true, message: 'Please input your First Name!'}]}
+                    rules={[{ required: true, message: 'Please input your First Name!' }]}
                 >
                     <Input />
                 </Form.Item>
                 <Form.Item
                     label="Last Name"
                     name="lastName"
-                    rules={[{ required: true, message: 'Please input your Last Name!'}]}
+                    rules={[{ required: true, message: 'Please input your Last Name!' }]}
                 >
                     <Input />
                 </Form.Item>
@@ -69,14 +89,14 @@ function Registration() {
                     name="confirmPassword"
                     hasFeedback
                     dependencies={['password']}
-                    rules={[{ required: true, message: 'Please check your password!' },({ getFieldValue }) => ({
+                    rules={[{ required: true, message: 'Please check your password!' }, ({ getFieldValue }) => ({
                         validator(rule, value) {
-                          if (!value || getFieldValue('password') === value) {
-                            return Promise.resolve();
-                          }
-                          return Promise.reject('The two passwords that you entered do not match!');
+                            if (!value || getFieldValue('password') === value) {
+                                return Promise.resolve();
+                            }
+                            return Promise.reject('The two passwords that you entered do not match!');
                         },
-                      }),]}
+                    }),]}
                 >
                     <Input.Password />
                 </Form.Item>

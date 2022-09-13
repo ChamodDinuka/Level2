@@ -25,9 +25,10 @@ function Clients() {
     const [searchedColumn, setSearchedColumn] = useState('');
     const searchInput = useRef<InputRef>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [client, setClient] = useState([])
+    const [client, setClient] = useState([] as any)
+    const [dataSource, setDataSource] = useState([] as any)
     const [selectedClient, setSelectedClient] = useState([])
-    const [action,setAction] = useState('create')
+    const [action, setAction] = useState('create')
     const formRef = React.createRef<FormInstance>();
     const [form] = Form.useForm();
 
@@ -39,10 +40,11 @@ function Clients() {
         await axios.get('http://localhost:5000/clients')
             .then(response => {
                 setClient(response.data);
+                setDataSource(response.data)
             }).catch(function (error) {
             });
     }
-    const deleteClient = async (id:String) => {
+    const deleteClient = async (id: String) => {
         await axios.delete(`http://localhost:5000/clients/${id}`)
             .then(response => {
                 getClient();
@@ -54,7 +56,7 @@ function Clients() {
         setAction('create')
         setIsModalVisible(true);
     };
-    const showModalUpdate = (data:any) => {
+    const showModalUpdate = (data: any) => {
         setAction('update')
         setSelectedClient(data._id)
         form.setFieldsValue(data);
@@ -70,19 +72,19 @@ function Clients() {
         setIsModalVisible(false);
     };
     const onFinish = async (values: any) => {
-        Object.assign(values,{"key":values.email})
-        if(action === 'create'){
-        await axios.post('http://localhost:5000/clients', values)
-            .then(response => {
-                message.success('Successfully created')
-                formRef.current!.resetFields();
-                setIsModalVisible(false);
-                getClient();
-            }).catch(function (error) {
-                message.error(error.response.data.error)
-            });
+        Object.assign(values, { "key": values.email })
+        if (action === 'create') {
+            await axios.post('http://localhost:5000/clients', values)
+                .then(response => {
+                    message.success('Successfully created')
+                    formRef.current!.resetFields();
+                    setIsModalVisible(false);
+                    getClient();
+                }).catch(function (error) {
+                    message.error(error.response.data.error)
+                });
         }
-        if(action === 'update'){
+        if (action === 'update') {
             await axios.put(`http://localhost:5000/clients/${selectedClient}`, values)
                 .then(response => {
                     message.success('Successfully updated')
@@ -92,17 +94,17 @@ function Clients() {
                 }).catch(function (error) {
                     message.error(error.response.data.error)
                 });
-            }
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {
         message.error("Fill the form")
     };
-    const showDeleteConfirm = (data:any) => {
+    const showDeleteConfirm = (data: any) => {
         confirm({
             title: 'Are you sure delete this client',
             icon: <ExclamationCircleOutlined />,
-            content: data.firstName+" "+data.lastName,
+            content: data.firstName + " " + data.lastName,
             okText: 'Yes',
             okType: 'danger',
             cancelText: 'No',
@@ -235,13 +237,12 @@ function Clients() {
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <Button type="primary" onClick={()=>showModalUpdate(record)}>Update</Button>
-                    <Button type="dashed" danger onClick={()=>showDeleteConfirm(record)}>Delete</Button>
+                    <Button type="primary" onClick={() => showModalUpdate(record)}>Update</Button>
+                    <Button type="dashed" danger onClick={() => showDeleteConfirm(record)}>Delete</Button>
                 </Space>
             ),
         },
     ];
-
     return (
         <div className="client_table">
             <Row style={{ "marginBottom": 10, "marginTop": 10 }}>
@@ -254,8 +255,29 @@ function Clients() {
                     </Button>
                 </Col>
             </Row>
-            <Table columns={columns} dataSource={client} />
-            <Modal title={action === 'create' ? "New client" :"Update client"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
+            <Row>
+                <Input
+                    placeholder="Search"
+                    value={searchText}
+                    onChange={e => {
+                        const currValue = e.target.value;
+                        setSearchText(currValue);
+                        const filteredData = client.filter((entry: any) =>
+                            entry['firstName'].toUpperCase().includes(currValue.toUpperCase()) || 
+                            entry['lastName'].toUpperCase().includes(currValue.toUpperCase())  ||
+                            entry['email'].toUpperCase().includes(currValue.toUpperCase())
+                            //entry.firstName.includes(currValue)
+                        );
+                        setDataSource(filteredData);
+                        if (currValue.length === 0) {
+                            getClient()
+                        }
+                    }}
+                />
+            </Row>
+            <br/>
+            <Table columns={columns} dataSource={dataSource} />
+            <Modal title={action === 'create' ? "New client" : "Update client"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
                     labelCol={{ span: 8 }}
@@ -273,7 +295,7 @@ function Clients() {
                         name="firstName"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
-                        <Input/>
+                        <Input />
                     </Form.Item>
                     <Form.Item
                         label="Last Name"
@@ -293,7 +315,7 @@ function Clients() {
                     <Form.Item
                         label="Telephone"
                         name="telephone"
-                        rules={[{ required: true, message: 'Please input your password!' }]}
+                        rules={[{ required: true, message: 'Please input your password!', type: 'string', pattern: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im }]}
                     >
                         <Input />
                     </Form.Item>

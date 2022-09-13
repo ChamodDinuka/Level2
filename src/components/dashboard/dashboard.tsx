@@ -5,6 +5,7 @@ import Charts from './charts'
 import Reservation from './reservation'
 import Admin from './admin'
 import Clients from './clients'
+import Calendar from './calendar'
 
 function Dashboard() {
     const { Sider, Content } = Layout;
@@ -21,6 +22,7 @@ function Dashboard() {
                 <li id="side" onClick={()=>setTab("Clients")}>Clients</li>
                 <li id="side" onClick={()=>setTab("Reservations")}>Reservations</li>
                 <li id="side" onClick={()=>setTab("Admins")}>Admins</li>
+                <li id="side" onClick={()=>setTab("Calendar")}>Calendar</li>
             </ul>
         </Sider>
         <Content>
@@ -28,6 +30,7 @@ function Dashboard() {
             {tab === "Clients" && <Clients/>}
             {tab === "Reservations" && <Reservation/>}
             {tab === "Admins" && <Admin/>}
+            {tab === "Calendar" && <Calendar/>}
         </Content>
       </Layout>
   )

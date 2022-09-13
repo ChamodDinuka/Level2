@@ -2,12 +2,11 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { SearchOutlined } from '@ant-design/icons';
 import type { InputRef, Result } from 'antd';
-import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select, message } from 'antd';
+import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select, message, TimePicker } from 'antd';
 import type { FormInstance } from 'antd/es/form';
 import type { ColumnsType, ColumnType } from 'antd/es/table';
 import type { FilterConfirmProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
-import { TimePicker } from 'antd';
 import moment from 'moment';
 import axios from "axios";
 import './dashboard.css'
@@ -37,7 +36,9 @@ function Reservation() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const formRef = React.createRef<FormInstance>();
     const [client, setClient] = useState([]);
+    const [dataSource, setDataSource] = useState([] as any)
     const [types, setTypes] = useState([]);
+    const [stylist, setStylist] = useState([])
     const [selectedReservation, setSelectedReservation] = useState([])
     const [action, setAction] = useState('create')
     const [form] = Form.useForm();
@@ -47,6 +48,7 @@ function Reservation() {
         getClient();
         getType();
         getReservation();
+        getStylish();
     }, [])
 
     const getClient = async () => {
@@ -63,10 +65,18 @@ function Reservation() {
             }).catch(function (error) {
             });
     }
+    const getStylish = async () => {
+        await axios.get('http://localhost:5000/users')
+            .then(response => {
+                setStylist(response.data);
+            }).catch(function (error) {
+            });
+    }
     const getReservation = async () => {
         await axios.get('http://localhost:5000/reservations')
             .then(response => {
                 setReservation(response.data);
+                setDataSource(response.data)
             }).catch(function (error) {
             });
     }
@@ -86,6 +96,8 @@ function Reservation() {
         const temData = {
             "client": data.client,
             "type": data.type,
+            "stylist": data.stylist,
+            "status": data.status,
             "date": moment(data.date),
             "time": moment(data.time)
         }
@@ -114,21 +126,21 @@ function Reservation() {
         if (selectedType)
             type = selectedType['type'];
 
-        Object.assign(values, { "key": reservations.length + 1, "status": "Scheduled", "clientName": name, "typeName": type })
+        Object.assign(values, { "key": action === 'create' ? reservations.length + 1 : values.key, "clientName": name, "typeName": type })
         console.log(values)
         values.time = moment(values.time).format('hh:mm')
         values.date = moment(values.date).format('YYYY-MM-DD')
 
-        if(action === 'create'){
+        if (action === 'create') {
             await axios.post('http://localhost:5000/reservations', values)
-            .then(response => {
-                message.success('Successfully created')
-                formRef.current!.resetFields();
-                setIsModalVisible(false);
-                getReservation();
-            }).catch(function (error) {
-                message.error("Fill the form correctly")
-            });
+                .then(response => {
+                    message.success('Successfully created')
+                    formRef.current!.resetFields();
+                    setIsModalVisible(false);
+                    getReservation();
+                }).catch(function (error) {
+                    message.error("Fill the form correctly")
+                });
         }
 
         if (action === 'update') {
@@ -317,7 +329,27 @@ function Reservation() {
                     </Button>
                 </Col>
             </Row>
-            <Table columns={columns} dataSource={reservations} />
+            <Row>
+                <Input
+                    placeholder="Search"
+                    value={searchText}
+                    onChange={e => {
+                        const currValue = e.target.value;
+                        setSearchText(currValue);
+                        const filteredData = reservations.filter((entry: any) =>
+                            entry['clientName'].toUpperCase().includes(currValue.toUpperCase()) ||
+                            entry['typeName'].toUpperCase().includes(currValue.toUpperCase())
+                            //entry.firstName.includes(currValue)
+                        );
+                        setDataSource(filteredData);
+                        if (currValue.length === 0) {
+                            getReservation()
+                        }
+                    }}
+                />
+            </Row>
+            <br />
+            <Table columns={columns} dataSource={dataSource} />
             <Modal title={action === 'create' ? "New reservation" : "Update reservation"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
@@ -367,6 +399,40 @@ function Reservation() {
                     </Form.Item>
 
                     <Form.Item
+                        label="Stylist"
+                        name="stylist"
+                        rules={[{ required: true, message: 'Please input your stylist!' }]}
+                    >
+                        <Select
+                            placeholder="Select a option and change input text above"
+                            onChange={onGenderChange}
+                            allowClear
+                        >
+                            {stylist && stylist.map((data: any) => {
+                                return (
+                                    <Option value={data._id} key={data._id}>{data.firstName + " " + data.lastName}</Option>
+                                )
+                            })}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        label="Status"
+                        name="status"
+                        rules={[{ required: true, message: 'Please input your stylist!' }]}
+                    >
+                        <Select
+                            placeholder="Select a option and change input text above"
+                            onChange={onGenderChange}
+                            allowClear
+
+                        >
+                            <Option value="Scheduled" >Scheduled</Option>
+                            <Option value="Completed">Completed</Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
                         label="Date"
                         name="date"
                         rules={[{ required: true, message: 'Please input your date!', type: 'date' }]}
@@ -378,7 +444,7 @@ function Reservation() {
                         name="time"
                         rules={[{ required: true, message: 'Please input your Time!' }]}
                     >
-                        <TimePicker allowClear name="time" format={format}/>
+                        <TimePicker allowClear name="time" format={format} />
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">
