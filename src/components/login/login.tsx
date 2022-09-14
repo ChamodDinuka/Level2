@@ -10,7 +10,7 @@ function Login() {
         await axios.post('http://localhost:5000/login', values)
             .then(response => {
                 localStorage.setItem('user', JSON.stringify(response.data))
-                navigate("dashboard");
+                setTimeout(()=>navigate("dashboard"), 1000)
             }).catch(function (error) {
                 message.error(error.response.data.error)
             });
