@@ -299,7 +299,7 @@ function Admin() {
                 />
             </Row>
             <br/>
-            <Table columns={columns} dataSource={dataSource} />
+            <Table columns={columns} dataSource={dataSource} style={{overflow:"scroll"}}/>
             <Modal title={action === 'create' ? "New admin" : "Update admin"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"

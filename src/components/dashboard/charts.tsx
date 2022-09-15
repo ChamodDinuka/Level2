@@ -9,7 +9,7 @@ function Charts() {
     const dataBar = [
         {
             label: 'Mon.',
-            type: 'series1',
+            type: 'kalpana',
             value: 2800,
         },
         {
@@ -19,7 +19,7 @@ function Charts() {
         },
         {
             label: 'Tues.',
-            type: 'series1',
+            type: 'kalpana',
             value: 1800,
         },
         {
@@ -95,10 +95,10 @@ function Charts() {
         marginRatio: 0,
     };
     return (
-        <div className="main_chart">
-            <Pie {...pie} />
+        <>
+            <Pie {...pie } />
             <Bar {...bar} />
-        </div>
+            </>
     )
 }
 

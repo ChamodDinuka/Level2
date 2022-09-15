@@ -276,7 +276,7 @@ function Clients() {
                 />
             </Row>
             <br/>
-            <Table columns={columns} dataSource={dataSource} />
+            <Table columns={columns} dataSource={dataSource} style={{overflow:"scroll"}}/>
             <Modal title={action === 'create' ? "New client" : "Update client"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
