@@ -10,6 +10,7 @@ import Highlighter from 'react-highlight-words';
 import moment from 'moment';
 import axios from "axios";
 import './dashboard.css'
+import { isDisabled } from '@testing-library/user-event/dist/utils';
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -317,6 +318,16 @@ function Reservation() {
                 formRef.current!.setFieldsValue({ note: 'Hi there!' });
         }
     };
+    const disabledHours = () => {
+        const hours = [];
+    
+        for (let min = 0,max=23; min < 8; min++,max--) {
+          hours.push(min);
+          hours.push(max);
+        }
+    
+        return hours;
+      };
     return (
         <div className="client_table">
             <Row style={{ "marginBottom": 10, "marginTop": 10 }}>
@@ -349,7 +360,7 @@ function Reservation() {
                 />
             </Row>
             <br />
-            <Table columns={columns} dataSource={dataSource} style={{overflow:"scroll"}}/>
+            <Table columns={columns} dataSource={dataSource} style={{ overflow: "scroll" }} />
             <Modal title={action === 'create' ? "New reservation" : "Update reservation"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
@@ -437,14 +448,17 @@ function Reservation() {
                         name="date"
                         rules={[{ required: true, message: 'Please input your date!', type: 'date' }]}
                     >
-                        <DatePicker />
+                        <DatePicker disabledDate={(current) => {
+                            let customDate = moment().format("YYYY-MM-DD");
+                            return current && current < moment(customDate, "YYYY-MM-DD");
+                        }} />
                     </Form.Item>
                     <Form.Item
                         label="Time"
                         name="time"
                         rules={[{ required: true, message: 'Please input your Time!' }]}
                     >
-                        <TimePicker allowClear name="time" format={format} />
+                        <TimePicker allowClear name="time" format={format} minuteStep={60} disabledHours={disabledHours}/>
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">

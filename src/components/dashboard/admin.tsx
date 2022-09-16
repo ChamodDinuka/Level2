@@ -340,7 +340,10 @@ function Admin() {
                         name="joinDate"
                         rules={[{ required: true, message: 'Please input your join date!', type: 'date' }]}
                     >
-                        <DatePicker/>
+                        <DatePicker disabledDate={(current) => {
+                            let customDate = moment().format("YYYY-MM-DD");
+                            return current && current < moment(customDate, "YYYY-MM-DD");
+                        }}/>
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">
