@@ -42,9 +42,11 @@ function Reservation() {
     const [stylist, setStylist] = useState([])
     const [selectedReservation, setSelectedReservation] = useState([])
     const [action, setAction] = useState('create')
+    const [selectedStylist, setselectedStylist] = useState('');
+    const [selectedDate, setSelectedDate] = useState('');
+    const [blockedTimes, setBlockedTimes] = useState([])
     const [form] = Form.useForm();
     const [reservations, setReservation] = useState([]);
-
     useEffect(() => {
         getClient();
         getType();
@@ -104,6 +106,8 @@ function Reservation() {
         }
         setAction('update')
         setSelectedReservation(data._id)
+        setSelectedDate(data.date)
+        setselectedStylist(data.stylist)
         form.setFieldsValue(temData);
         setIsModalVisible(true);
     };
@@ -114,6 +118,8 @@ function Reservation() {
 
     const handleCancel = () => {
         formRef.current!.resetFields();
+        setSelectedDate('')
+        setselectedStylist('')
         setIsModalVisible(false);
     };
     const onFinish = async (values: any) => {
@@ -318,16 +324,34 @@ function Reservation() {
                 formRef.current!.setFieldsValue({ note: 'Hi there!' });
         }
     };
-    const disabledHours = () => {
-        const hours = [];
+    const disabledHours =() => {
+        const hours = [] as any;
     
         for (let min = 0,max=23; min < 8; min++,max--) {
           hours.push(min);
           hours.push(max);
         }
-    
-        return hours;
+        return hours.concat(blockedTimes)
       };
+    const getHourse=async()=>{
+        console.log("getHourse")
+        await axios.get(`http://localhost:5000/blocked?id=${selectedStylist}&date=${selectedDate}`)
+            .then(response => {
+                setBlockedTimes(response.data)
+            }).catch(function (error) {
+            });
+    }
+    const onStylistSelect=(e:any)=>{
+        setselectedStylist(e);
+    }
+    const onDateSelect=(e:any)=>{
+        setSelectedDate(moment(e).format('YYYY-MM-DD'))
+    }
+    useEffect(()=>{
+        if(selectedDate !=='' && selectedStylist !== ''){
+            getHourse();
+         }
+    },[selectedDate,selectedStylist])
     return (
         <div className="client_table">
             <Row style={{ "marginBottom": 10, "marginTop": 10 }}>
@@ -377,6 +401,7 @@ function Reservation() {
                     <Form.Item
                         label="Name"
                         name="client"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
                         <Select
@@ -394,6 +419,7 @@ function Reservation() {
                     <Form.Item
                         label="Type"
                         name="type"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your Last Name!' }]}
                     >
                         <Select
@@ -412,11 +438,12 @@ function Reservation() {
                     <Form.Item
                         label="Stylist"
                         name="stylist"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your stylist!' }]}
                     >
                         <Select
                             placeholder="Select a option and change input text above"
-                            onChange={onGenderChange}
+                            onChange={(e)=>onStylistSelect(e)}
                             allowClear
                         >
                             {stylist && stylist.map((data: any) => {
@@ -430,6 +457,7 @@ function Reservation() {
                     <Form.Item
                         label="Status"
                         name="status"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your stylist!' }]}
                     >
                         <Select
@@ -446,19 +474,21 @@ function Reservation() {
                     <Form.Item
                         label="Date"
                         name="date"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your date!', type: 'date' }]}
                     >
                         <DatePicker disabledDate={(current) => {
                             let customDate = moment().format("YYYY-MM-DD");
                             return current && current < moment(customDate, "YYYY-MM-DD");
-                        }} />
+                        }} onChange={(e)=>onDateSelect(e)}/>
                     </Form.Item>
                     <Form.Item
                         label="Time"
                         name="time"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your Time!' }]}
                     >
-                        <TimePicker allowClear name="time" format={format} minuteStep={60} disabledHours={disabledHours}/>
+                        <TimePicker allowClear name="time" format={format} minuteStep={60} disabledHours={disabledHours} disabled={selectedDate ==='' || selectedStylist === ''}/>
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">

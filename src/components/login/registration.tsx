@@ -58,6 +58,7 @@ function Registration() {
                 <Form.Item
                     label="First Name"
                     name="firstName"
+                    validateTrigger="onSubmit"
                     rules={[{ required: true, message: 'Please input your First Name!' }]}
                 >
                     <Input />
@@ -65,6 +66,7 @@ function Registration() {
                 <Form.Item
                     label="Last Name"
                     name="lastName"
+                    validateTrigger="onSubmit"
                     rules={[{ required: true, message: 'Please input your Last Name!' }]}
                 >
                     <Input />
@@ -72,7 +74,8 @@ function Registration() {
                 <Form.Item
                     label="Email"
                     name="email"
-                    rules={[{ required: true, message: 'Please input your Email!', type: 'email' }]}
+                    validateTrigger="onSubmit"
+                    rules={[{ required: true, message: 'Please input correct Email!', type: 'email' }]}
                 >
                     <Input />
                 </Form.Item>

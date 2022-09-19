@@ -37,7 +37,8 @@ function Login() {
                 <Form.Item
                     label="Email"
                     name="email"
-                    rules={[{ required: true, message: 'Please input your Email!', type: 'email' }]}
+                    validateTrigger="onSubmit"
+                    rules={[{ required: true, message: 'Please input correct Email!', type: 'email' }]}
                 >
                     <Input />
                 </Form.Item>
@@ -45,6 +46,7 @@ function Login() {
                 <Form.Item
                     label="Password"
                     name="password"
+                    validateTrigger="onSubmit"
                     rules={[{ required: true, message: 'Please input your password!' }]}
                 >
                     <Input.Password />

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, isValidElement } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { SearchOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
@@ -8,6 +8,7 @@ import type { FilterConfirmProps } from 'antd/es/table/interface';
 import Highlighter from 'react-highlight-words';
 import axios from "axios";
 import type { FormInstance } from 'antd/es/form';
+import { validateLocaleAndSetLanguage } from 'typescript';
 
 const { confirm } = Modal;
 interface DataType {
@@ -293,6 +294,7 @@ function Clients() {
                     <Form.Item
                         label="First Name"
                         name="firstName"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
                         <Input />
@@ -300,6 +302,7 @@ function Clients() {
                     <Form.Item
                         label="Last Name"
                         name="lastName"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your Last Name!' }]}
                     >
                         <Input />
@@ -307,7 +310,8 @@ function Clients() {
                     <Form.Item
                         label="Email"
                         name="email"
-                        rules={[{ required: true, message: 'Please input your Email!', type: 'email' }]}
+                        validateTrigger="onSubmit"
+                        rules={[{ required: true, message: 'Please input correct Email!', type: 'email' }]}
                     >
                         <Input />
                     </Form.Item>
@@ -315,7 +319,8 @@ function Clients() {
                     <Form.Item
                         label="Telephone"
                         name="telephone"
-                        rules={[{ required: true, message: 'Please input your password!', type: 'string', pattern: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im }]}
+                        validateTrigger="onSubmit"
+                        rules={[{ required: true, message: 'Please input correct phone number!', type: 'string', pattern: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im }]}
                     >
                         <Input />
                     </Form.Item>

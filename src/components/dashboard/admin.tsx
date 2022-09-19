@@ -316,6 +316,7 @@ function Admin() {
                     <Form.Item
                         label="First Name"
                         name="firstName"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your First Name!' }]}
                     >
                         <Input />
@@ -323,6 +324,7 @@ function Admin() {
                     <Form.Item
                         label="Last Name"
                         name="lastName"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your Last Name!' }]}
                     >
                         <Input />
@@ -330,6 +332,7 @@ function Admin() {
                     <Form.Item
                         label="Email"
                         name="email"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your Email!', type: 'email' }]}
                     >
                         <Input />
@@ -338,6 +341,7 @@ function Admin() {
                     <Form.Item
                         label="Join Date"
                         name="joinDate"
+                        validateTrigger="onSubmit"
                         rules={[{ required: true, message: 'Please input your join date!', type: 'date' }]}
                     >
                         <DatePicker disabledDate={(current) => {
