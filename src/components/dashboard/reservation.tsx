@@ -1,16 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { SearchOutlined } from '@ant-design/icons';
-import type { InputRef, Result } from 'antd';
 import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, Select, message, TimePicker } from 'antd';
 import type { FormInstance } from 'antd/es/form';
-import type { ColumnsType, ColumnType } from 'antd/es/table';
-import type { FilterConfirmProps } from 'antd/es/table/interface';
-import Highlighter from 'react-highlight-words';
+import type { ColumnsType } from 'antd/es/table';
 import moment from 'moment';
 import axios from "axios";
 import './dashboard.css'
-import { isDisabled } from '@testing-library/user-event/dist/utils';
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -27,13 +22,9 @@ interface DataType {
     status: string;
 }
 
-type DataIndex = keyof DataType;
-
 
 function Reservation() {
     const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const searchInput = useRef<InputRef>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const formRef = React.createRef<FormInstance>();
     const [client, setClient] = useState([]);
@@ -47,6 +38,8 @@ function Reservation() {
     const [blockedTimes, setBlockedTimes] = useState([])
     const [form] = Form.useForm();
     const [reservations, setReservation] = useState([]);
+    const baseUrl = process.env.REACT_APP_BASE_URL
+
     useEffect(() => {
         getClient();
         getType();
@@ -55,28 +48,28 @@ function Reservation() {
     }, [])
 
     const getClient = async () => {
-        await axios.get('http://localhost:5000/clients')
+        await axios.get(`${baseUrl}/clients`)
             .then(response => {
                 setClient(response.data);
             }).catch(function (error) {
             });
     }
     const getType = async () => {
-        await axios.get('http://localhost:5000/types')
+        await axios.get(`${baseUrl}/types`)
             .then(response => {
                 setTypes(response.data);
             }).catch(function (error) {
             });
     }
     const getStylish = async () => {
-        await axios.get('http://localhost:5000/users')
+        await axios.get(`${baseUrl}/users`)
             .then(response => {
                 setStylist(response.data);
             }).catch(function (error) {
             });
     }
     const getReservation = async () => {
-        await axios.get('http://localhost:5000/reservations')
+        await axios.get(`${baseUrl}/reservations`)
             .then(response => {
                 setReservation(response.data);
                 setDataSource(response.data)
@@ -84,7 +77,7 @@ function Reservation() {
             });
     }
     const deleteReservation = async (id: String) => {
-        await axios.delete(`http://localhost:5000/reservations/${id}`)
+        await axios.delete(`${baseUrl}/reservations/${id}`)
             .then(response => {
                 getReservation();
                 message.success('Successfully deleted')
@@ -102,7 +95,7 @@ function Reservation() {
             "stylist": data.stylist,
             "status": data.status,
             "date": moment(data.date),
-            "time": moment(data.time)
+            "time": moment(data.time,"HH:mm")
         }
         setAction('update')
         setSelectedReservation(data._id)
@@ -134,12 +127,11 @@ function Reservation() {
             type = selectedType['type'];
 
         Object.assign(values, { "key": action === 'create' ? reservations.length + 1 : values.key, "clientName": name, "typeName": type })
-        console.log(values)
         values.time = moment(values.time).format('hh:mm')
         values.date = moment(values.date).format('YYYY-MM-DD')
 
         if (action === 'create') {
-            await axios.post('http://localhost:5000/reservations', values)
+            await axios.post(`${baseUrl}/reservations`, values)
                 .then(response => {
                     message.success('Successfully created')
                     formRef.current!.resetFields();
@@ -151,7 +143,7 @@ function Reservation() {
         }
 
         if (action === 'update') {
-            await axios.put(`http://localhost:5000/reservations/${selectedReservation}`, values)
+            await axios.put(`${baseUrl}/reservations/${selectedReservation}`, values)
                 .then(response => {
                     message.success('Successfully updated')
                     formRef.current!.resetFields();
@@ -165,20 +157,6 @@ function Reservation() {
 
     const onFinishFailed = (errorInfo: any) => {
         message.error("Fill the form correctly")
-    };
-    const handleSearch = (
-        selectedKeys: string[],
-        confirm: (param?: FilterConfirmProps) => void,
-        dataIndex: DataIndex,
-    ) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-    };
-
-    const handleReset = (clearFilters: () => void) => {
-        clearFilters();
-        setSearchText('');
     };
     const showDeleteConfirm = (data: any) => {
         confirm({
@@ -195,82 +173,13 @@ function Reservation() {
             },
         });
     };
-
-    const getColumnSearchProps = (dataIndex: DataIndex): ColumnType<DataType> => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    ref={searchInput}
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                    style={{ marginBottom: 8, display: 'block' }}
-                />
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Search
-                    </Button>
-                    <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Reset
-                    </Button>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            confirm({ closeDropdown: false });
-                            setSearchText((selectedKeys as string[])[0]);
-                            setSearchedColumn(dataIndex);
-                        }}
-                    >
-                        Filter
-                    </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: (filtered: boolean) => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-        ),
-        onFilter: (value, record) =>
-            record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase()),
-        onFilterDropdownVisibleChange: visible => {
-            if (visible) {
-                setTimeout(() => searchInput.current?.select(), 100);
-            }
-        },
-        render: text =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                text
-            ),
-    });
     const columns: ColumnsType<DataType> = [
         {
             title: 'Name',
             dataIndex: 'clientName',
             key: 'clientName',
             width: '20%',
-            ...getColumnSearchProps('client'),
-            sorter: (a, b) => a.client.length - b.client.length,
+            sorter: (a, b) => a.clientName.localeCompare(b.clientName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -278,8 +187,7 @@ function Reservation() {
             dataIndex: 'typeName',
             key: 'typeName',
             width: '15%',
-            ...getColumnSearchProps('type'),
-            sorter: (a, b) => a.type.length - b.type.length,
+            sorter: (a, b) => a.typeName.localeCompare(b.typeName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -287,8 +195,7 @@ function Reservation() {
             dataIndex: 'date',
             key: 'date',
             width: '15%',
-            ...getColumnSearchProps('date'),
-            sorter: (a, b) => a.date.length - b.date.length,
+            sorter: (a, b) => a.date.localeCompare(b.date),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -328,16 +235,19 @@ function Reservation() {
         const hours = [] as any;
     
         for (let min = 0,max=23; min < 8; min++,max--) {
-          hours.push(min);
-          hours.push(max);
+          if(max >= 18){
+            hours.push(min)
+            hours.push(max);
+          }else{
+            hours.push(min);
+          }
         }
         return hours.concat(blockedTimes)
       };
     const getHourse=async()=>{
-        console.log("getHourse")
-        await axios.get(`http://localhost:5000/blocked?id=${selectedStylist}&date=${selectedDate}`)
+        await axios.get(`${baseUrl}/blocked?id=${selectedStylist}&date=${selectedDate}`)
             .then(response => {
-                setBlockedTimes(response.data)
+                setBlockedTimes(response.data)    
             }).catch(function (error) {
             });
     }
@@ -372,8 +282,8 @@ function Reservation() {
                         const currValue = e.target.value;
                         setSearchText(currValue);
                         const filteredData = reservations.filter((entry: any) =>
-                            entry['clientName'].toUpperCase().includes(currValue.toUpperCase()) ||
-                            entry['typeName'].toUpperCase().includes(currValue.toUpperCase())
+                            entry['clientName'].includes(currValue) ||
+                            entry['typeName'].includes(currValue)
                             //entry.firstName.includes(currValue)
                         );
                         setDataSource(filteredData);

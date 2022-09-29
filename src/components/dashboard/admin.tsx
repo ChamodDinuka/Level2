@@ -1,10 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { SearchOutlined } from '@ant-design/icons';
-import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker,  InputRef, message } from 'antd';
-import type { ColumnsType, ColumnType } from 'antd/es/table';
-import type { FilterConfirmProps } from 'antd/es/table/interface';
-import Highlighter from 'react-highlight-words';
+import { Button, Input, Space, Table, Row, Col, Modal, Form, DatePicker, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import './dashboard.css'
 import axios from 'axios'
 import moment from 'moment';
@@ -21,14 +18,11 @@ interface DataType {
     email: string;
 }
 
-type DataIndex = keyof DataType;
 
 function Admin() {
     const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
     const [users, setUsers] = useState([])
     const [dataSource, setDataSource] = useState([] as any)
-    const searchInput = useRef<InputRef>(null);
     const formRef = React.createRef<FormInstance>();
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedAdmin,setSelectedAdmin]=useState('')
@@ -42,13 +36,14 @@ function Admin() {
     const service = process.env.REACT_APP_EMAIL_SERVICE as string
     const template = process.env.REACT_APP_EMAIL_TEMPLATE as string
     const emailId = process.env.REACT_APP_EMAIL_ID
+    const baseUrl = process.env.REACT_APP_BASE_URL
 
     useEffect(() => {
         getUsers();
     },[])
 
     const getUsers = async () => {
-        await axios.get('http://localhost:5000/users')
+        await axios.get(`${baseUrl}/users`)
             .then(response => {
                 setUsers(response.data);
                 setDataSource(response.data)
@@ -77,14 +72,15 @@ function Admin() {
         setIsModalVisible(false);
     };
 
-    const handleCancel = () => {
-        formRef.current!.resetFields();
+    const handleCancel = () => { 
         setIsModalVisible(false);
+        form.resetFields()
     };
     const onFinish = async (values: any) => {
         values.joinDate = moment(values.joinDate).format('YYYY-MM-DD')
+        Object.assign(values, { "key": values.email })
         if (action === 'create') {
-            await axios.post('http://localhost:5000/token', values)
+            await axios.post(`${baseUrl}/token`, values)
                 .then(response => {
                     let token = response.data.token
                     let link = `http://localhost:3000/signup?token=${token}`
@@ -93,22 +89,19 @@ function Admin() {
                         .then((result) => {
                             message.success('Successfully Invited')
                             handleCancel();
-                            console.log(result)
                         }, (error) => {
-                            console.log(error)
                         });
                 }).catch(function (error) {
                 });
 
         }
         if( action ==='update'){
-            await axios.put(`http://localhost:5000/users/${selectedAdmin}`, values)
+            await axios.put(`${baseUrl}/users/${selectedAdmin}`, values)
                 .then(response => {
                     message.success('Successfully updated')
                     handleCancel();
                     getUsers();
                 }).catch(function (error) {
-                    console.log(error)
                     message.error("Fill the form correctly")
                 });
         }
@@ -117,22 +110,8 @@ function Admin() {
     const onFinishFailed = (errorInfo: any) => {
         message.error("Fill the form correctly")
     };
-    const handleSearch = (
-        selectedKeys: string[],
-        confirm: (param?: FilterConfirmProps) => void,
-        dataIndex: DataIndex,
-    ) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-    };
-
-    const handleReset = (clearFilters: () => void) => {
-        clearFilters();
-        setSearchText('');
-    };
     const deleteUser = async (id: String) => {
-        await axios.delete(`http://localhost:5000/users/${id}`)
+        await axios.delete(`${baseUrl}/users/${id}`)
             .then(response => {
                 getUsers();
                 message.success('Successfully deleted')
@@ -151,86 +130,16 @@ function Admin() {
                 deleteUser(data._id)
             },
             onCancel() {
-                console.log('Cancel');
             },
         });
     };
-
-    const getColumnSearchProps = (dataIndex: DataIndex): ColumnType<DataType> => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    ref={searchInput}
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                    style={{ marginBottom: 8, display: 'block' }}
-                />
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Search
-                    </Button>
-                    <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Reset
-                    </Button>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            confirm({ closeDropdown: false });
-                            setSearchText((selectedKeys as string[])[0]);
-                            setSearchedColumn(dataIndex);
-                        }}
-                    >
-                        Filter
-                    </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: (filtered: boolean) => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-        ),
-        onFilter: (value, record) =>
-            record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase()),
-        onFilterDropdownVisibleChange: visible => {
-            if (visible) {
-                setTimeout(() => searchInput.current?.select(), 100);
-            }
-        },
-        render: text =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                text
-            ),
-    });
     const columns: ColumnsType<DataType> = [
         {
             title: 'First Name',
             dataIndex: 'firstName',
             key: 'firstName',
             width: '30%',
-            ...getColumnSearchProps('firstName'),
-            sorter: (a, b) => a.firstName.length - b.firstName.length,
+            sorter: (a, b) => a.firstName.localeCompare(b.firstName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -238,8 +147,7 @@ function Admin() {
             dataIndex: 'lastName',
             key: 'lastName',
             width: '20%',
-            ...getColumnSearchProps('lastName'),
-            sorter: (a, b) => a.lastName.length - b.lastName.length,
+            sorter: (a, b) => a.lastName.localeCompare(b.lastName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -247,8 +155,7 @@ function Admin() {
             dataIndex: 'email',
             key: 'email',
             width: '20%',
-            ...getColumnSearchProps('email'),
-            sorter: (a, b) => a.email.length - b.email.length,
+            sorter: (a, b) => a.email.localeCompare(b.email),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -287,9 +194,9 @@ function Admin() {
                         const currValue = e.target.value;
                         setSearchText(currValue);
                         const filteredData = users.filter((entry: any) =>
-                            entry['firstName'].toUpperCase().includes(currValue.toUpperCase()) || 
-                            entry['lastName'].toUpperCase().includes(currValue.toUpperCase())  ||
-                            entry['email'].toUpperCase().includes(currValue.toUpperCase())
+                            entry['firstName'].includes(currValue) || 
+                            entry['lastName'].includes(currValue)  ||
+                            entry['email'].includes(currValue)
                         );
                         setDataSource(filteredData);
                         if (currValue.length === 0) {

@@ -5,67 +5,20 @@ import axios from 'axios'
 function Charts() {
     const [pieData, setPieData] = useState([])
     const [barData, setBarData] = useState([])
+    const baseUrl = process.env.REACT_APP_BASE_URL
 
-    const dataBar = [
-        {
-            label: 'Mon.',
-            type: 'kalpana',
-            value: 2800,
-        },
-        {
-            label: 'Mon.',
-            type: 'series2',
-            value: 2260,
-        },
-        {
-            label: 'Tues.',
-            type: 'kalpana',
-            value: 1800,
-        },
-        {
-            label: 'Tues.',
-            type: 'series2',
-            value: 1300,
-        },
-        {
-            label: 'Wed.',
-            type: 'series1',
-            value: 950,
-        },
-        {
-            label: 'Wed.',
-            type: 'series2',
-            value: 900,
-        },
-        {
-            label: 'Thur.',
-            type: 'series1',
-            value: 500,
-        },
-        {
-            label: 'Thur.',
-            type: 'series2',
-            value: 390,
-        },
-        {
-            label: 'Fri.',
-            type: 'series1',
-            value: 170,
-        },
-        {
-            label: 'Fri.',
-            type: 'series2',
-            value: 100,
-        },
-    ];
     useEffect(() => {
         getData();
     }, [])
     const getData = async () => {
-        await axios.get('http://localhost:5000/pie')
+        await axios.get(`${baseUrl}/pie`)
             .then(response => {
                 setPieData(response.data);
-                console.log(response.data)
+            }).catch(function (error) {
+            });
+            await axios.get(`${baseUrl}/bar`)
+            .then(response => {
+                setBarData(response.data);
             }).catch(function (error) {
             });
     }
@@ -86,7 +39,7 @@ function Charts() {
     };
     const bar = {
         appendPadding: 10,
-        data: dataBar,
+        data: barData,
         isGroup: true,
         xField: 'value',
         yField: 'label',
@@ -96,7 +49,8 @@ function Charts() {
     };
     return (
         <>
-            <Pie {...pie } />
+            <Pie {...pie }/>
+            <br/>
             <Bar {...bar} />
             </>
     )

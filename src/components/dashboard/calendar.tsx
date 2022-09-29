@@ -7,11 +7,12 @@ import axios from 'axios'
 
 function CalendarView() {
     const [reservations, setReservations] = useState<any[]>([])
+    const baseUrl = process.env.REACT_APP_BASE_URL
     useEffect(() => {
         getReservation();
     }, [])
     const getReservation = async () => {
-        await axios.get('http://localhost:5000/reservations')
+        await axios.get(`${baseUrl}/reservations`)
             .then(response => {
                 setReservations(response.data);
             }).catch(function (error) {
@@ -20,7 +21,6 @@ function CalendarView() {
     const getListData = (value: Moment) => {
         let listData: any[] = [];
         let tempData
-        console.log(value.format('YYYY-MM-DD'))
         tempData = reservations.filter(data => data.date === value.format('YYYY-MM-DD'))
         {
             tempData && tempData.map((data: any) => {

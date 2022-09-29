@@ -1,12 +1,12 @@
 import React,{ useEffect, useState } from 'react'
-import { Layout, Drawer, Space, Button  } from 'antd';
-import type { DrawerProps } from 'antd/es/drawer'
+import { Layout} from 'antd';
 import './dashboard.css'
 import Charts from './charts'
 import Reservation from './reservation'
 import Admin from './admin'
 import Clients from './clients'
-import Calendar from './calendar'
+import EventCalendar from './eventCalender'
+import {CustomerServiceOutlined, LineChartOutlined, UsergroupAddOutlined, UserAddOutlined, CalendarOutlined} from '@ant-design/icons'
 
 function Dashboard() {
     const { Sider, Content } = Layout;
@@ -29,11 +29,11 @@ function Dashboard() {
             {isDesktop ?
         <Sider>
             <ul>
-                <li id="side" onClick={()=>setTab("Dashboard")}>Dashboard</li>
-                <li id="side" onClick={()=>setTab("Clients")}>Clients</li>
-                <li id="side" onClick={()=>setTab("Reservations")}>Reservations</li>
-                <li id="side" onClick={()=>setTab("Admins")}>Admins</li>
-                <li id="side" onClick={()=>setTab("Calendar")}>Calendar</li>
+                <li id="side" onClick={()=>setTab("Dashboard")}><LineChartOutlined /> Dashboard</li>
+                <li id="side" onClick={()=>setTab("Clients")}><UsergroupAddOutlined /> Clients</li>
+                <li id="side" onClick={()=>setTab("Reservations")}><CustomerServiceOutlined /> Reservations</li>
+                <li id="side" onClick={()=>setTab("Admins")}><UserAddOutlined /> Admins</li>
+                <li id="side" onClick={()=>setTab("Calendar")}><CalendarOutlined /> Calendar</li>
             </ul>
         </Sider>:
         <></>}
@@ -42,7 +42,7 @@ function Dashboard() {
             {tab === "Clients" && <Clients/>}
             {tab === "Reservations" && <Reservation/>}
             {tab === "Admins" && <Admin/>}
-            {tab === "Calendar" && <Calendar/>}
+            {tab === "Calendar" && <EventCalendar/>}
         </Content>
       </Layout>
       </>

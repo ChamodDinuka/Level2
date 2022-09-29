@@ -6,33 +6,39 @@ import axios from 'axios'
 import moment from 'moment';
 
 function Registration() {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const onFinish = async (values: any) => {
         let token = searchParams.get("token")
         let tokenEmail;
         if (token) {
-            var base64Url = token.split('.')[1];
-            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
             tokenEmail = JSON.parse(jsonPayload).data.email
+            let tokenExp = new Date(JSON.parse(jsonPayload).exp * 1000)
+            let dateNow = new Date();
 
-            if (values.email === tokenEmail) {
-                Object.assign(values, { "joinDate": moment(new Date()).format('YYYY-MM-DD'), "role": 'admin', "key":values.email})
-                console.log(values)
-                await axios.post('http://localhost:5000/register', values)
-                    .then(response => {
-                        localStorage.setItem('user', JSON.stringify(response.data))
-                        message.success("Successfully registered")
-                        navigate("../dashboard");
-                    }).catch(function (error) {
-                        message.error(error.response.data.error)
-                    });
+            if (tokenExp < dateNow) {
+                message.error("Token is expired")
             } else {
-                message.error("This email not the requested email by admin")
+                if (values.email === tokenEmail) {
+                    Object.assign(values, { "joinDate": moment(new Date()).format('YYYY-MM-DD'), "role": 'admin', "key": values.email })
+
+                    await axios.post('http://localhost:5000/register', values)
+                        .then(response => {
+                            localStorage.setItem('user', JSON.stringify(response.data))
+                            message.success("Successfully registered")
+                            setTimeout(() => navigate("../dashboard"), 1000)
+                        }).catch(function (error) {
+                            message.error(error.response.data.error)
+                        });
+                } else {
+                    message.error("This email not the requested email by admin")
+                }
             }
         } else {
             message.error("You need a token to create account")

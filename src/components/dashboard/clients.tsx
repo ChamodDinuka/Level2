@@ -1,14 +1,9 @@
-import React, { useState, useRef, useEffect, isValidElement } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ExclamationCircleOutlined } from '@ant-design/icons';
-import { SearchOutlined } from '@ant-design/icons';
-import type { InputRef } from 'antd';
 import { Button, Input, Space, Table, Row, Col, Modal, Form, message } from 'antd';
-import type { ColumnsType, ColumnType } from 'antd/es/table';
-import type { FilterConfirmProps } from 'antd/es/table/interface';
-import Highlighter from 'react-highlight-words';
+import type { ColumnsType } from 'antd/es/table';
 import axios from "axios";
 import type { FormInstance } from 'antd/es/form';
-import { validateLocaleAndSetLanguage } from 'typescript';
 
 const { confirm } = Modal;
 interface DataType {
@@ -19,12 +14,8 @@ interface DataType {
     email: string;
 }
 
-type DataIndex = keyof DataType;
-
 function Clients() {
     const [searchText, setSearchText] = useState('');
-    const [searchedColumn, setSearchedColumn] = useState('');
-    const searchInput = useRef<InputRef>(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [client, setClient] = useState([] as any)
     const [dataSource, setDataSource] = useState([] as any)
@@ -32,13 +23,14 @@ function Clients() {
     const [action, setAction] = useState('create')
     const formRef = React.createRef<FormInstance>();
     const [form] = Form.useForm();
+    const baseUrl = process.env.REACT_APP_BASE_URL
 
     useEffect(() => {
         getClient();
     }, [])
 
     const getClient = async () => {
-        await axios.get('http://localhost:5000/clients')
+        await axios.get(`${baseUrl}/clients`)
             .then(response => {
                 setClient(response.data);
                 setDataSource(response.data)
@@ -46,7 +38,7 @@ function Clients() {
             });
     }
     const deleteClient = async (id: String) => {
-        await axios.delete(`http://localhost:5000/clients/${id}`)
+        await axios.delete(`${baseUrl}/clients/${id}`)
             .then(response => {
                 getClient();
                 message.success('Successfully deleted')
@@ -75,7 +67,7 @@ function Clients() {
     const onFinish = async (values: any) => {
         Object.assign(values, { "key": values.email })
         if (action === 'create') {
-            await axios.post('http://localhost:5000/clients', values)
+            await axios.post(`${baseUrl}/clients`, values)
                 .then(response => {
                     message.success('Successfully created')
                     formRef.current!.resetFields();
@@ -86,7 +78,7 @@ function Clients() {
                 });
         }
         if (action === 'update') {
-            await axios.put(`http://localhost:5000/clients/${selectedClient}`, values)
+            await axios.put(`${baseUrl}/clients/${selectedClient}`, values)
                 .then(response => {
                     message.success('Successfully updated')
                     formRef.current!.resetFields();
@@ -117,97 +109,13 @@ function Clients() {
         });
     };
 
-    const handleSearch = (
-        selectedKeys: string[],
-        confirm: (param?: FilterConfirmProps) => void,
-        dataIndex: DataIndex,
-    ) => {
-        confirm();
-        setSearchText(selectedKeys[0]);
-        setSearchedColumn(dataIndex);
-    };
-
-    const handleReset = (clearFilters: () => void) => {
-        clearFilters();
-        setSearchText('');
-    };
-
-    const getColumnSearchProps = (dataIndex: DataIndex): ColumnType<DataType> => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    ref={searchInput}
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                    style={{ marginBottom: 8, display: 'block' }}
-                />
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Search
-                    </Button>
-                    <Button
-                        onClick={() => clearFilters && handleReset(clearFilters)}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Reset
-                    </Button>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            confirm({ closeDropdown: false });
-                            setSearchText((selectedKeys as string[])[0]);
-                            setSearchedColumn(dataIndex);
-                        }}
-                    >
-                        Filter
-                    </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: (filtered: boolean) => (
-            <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-        ),
-        onFilter: (value, record) =>
-            record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase()),
-        onFilterDropdownVisibleChange: visible => {
-            if (visible) {
-                setTimeout(() => searchInput.current?.select(), 100);
-            }
-        },
-        render: text =>
-            searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                    searchWords={[searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                text
-            ),
-    });
-
     const columns: ColumnsType<DataType> = [
         {
             title: 'First Name',
             dataIndex: 'firstName',
             key: 'firstName',
             width: '30%',
-            ...getColumnSearchProps('firstName'),
-            sorter: (a, b) => a.firstName.length - b.firstName.length,
+            sorter: (a, b) => a.firstName.localeCompare(b.firstName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -215,8 +123,7 @@ function Clients() {
             dataIndex: 'lastName',
             key: 'lastName',
             width: '20%',
-            ...getColumnSearchProps('lastName'),
-            sorter: (a, b) => a.lastName.length - b.lastName.length,
+            sorter: (a, b) => a.lastName.localeCompare(b.lastName),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -224,8 +131,7 @@ function Clients() {
             dataIndex: 'email',
             key: 'email',
             width: '20%',
-            ...getColumnSearchProps('email'),
-            sorter: (a, b) => a.email.length - b.email.length,
+            sorter: (a, b) => a.email.localeCompare(b.email),
             sortDirections: ['descend', 'ascend'],
         },
         {
@@ -264,9 +170,9 @@ function Clients() {
                         const currValue = e.target.value;
                         setSearchText(currValue);
                         const filteredData = client.filter((entry: any) =>
-                            entry['firstName'].toUpperCase().includes(currValue.toUpperCase()) || 
-                            entry['lastName'].toUpperCase().includes(currValue.toUpperCase())  ||
-                            entry['email'].toUpperCase().includes(currValue.toUpperCase())
+                            entry['firstName'].includes(currValue) || 
+                            entry['lastName'].includes(currValue)  ||
+                            entry['email'].includes(currValue)
                             //entry.firstName.includes(currValue)
                         );
                         setDataSource(filteredData);
@@ -320,7 +226,7 @@ function Clients() {
                         label="Telephone"
                         name="telephone"
                         validateTrigger="onSubmit"
-                        rules={[{ required: true, message: 'Please input correct phone number!', type: 'string', pattern: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im }]}
+                        rules={[{ required: true, message: 'Please input correct phone number!', type: 'string', pattern:/^(?:0|94|\+94)?(?:(11|21|23|24|25|26|27|31|32|33|34|35|36|37|38|41|45|47|51|52|54|55|57|63|65|66|67|81|912)(0|2|3|4|5|7|9)|7(0|1|2|4|5|6|7|8)\d)\d{6}$/ }]}
                     >
                         <Input />
                     </Form.Item>
