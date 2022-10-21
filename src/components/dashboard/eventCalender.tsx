@@ -54,7 +54,7 @@ function EventCalender() {
             }
       };
   return (
-    <div>
+    <div >
         <DnDCalendar
           defaultDate={moment().toDate()}
           defaultView="month"
@@ -64,7 +64,7 @@ function EventCalender() {
           onEventResize={onEventResize}
           resizable
           views={['month']}
-          style={{ height: "100vh",padding:10,alignItems:"center",justifyContent:"center",flexDirection:"column" }}
+          style={{height: "100vh",padding:10,alignItems:"center",justifyContent:"center",flexDirection:"column" }}
         />
     </div>
   )

@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import { Pie, Bar } from '@ant-design/plots';
 import axios from 'axios'
+import {Table} from 'antd'
+import type { ColumnsType } from 'antd/es/table';
 
 function Charts() {
     const [pieData, setPieData] = useState([])
     const [barData, setBarData] = useState([])
     const baseUrl = process.env.REACT_APP_BASE_URL
+
+    interface DataType {
+        label: string;
+        type: string;
+        value: number;
+    }
 
     useEffect(() => {
         getData();
@@ -47,11 +55,27 @@ function Charts() {
         seriesField: 'type',
         marginRatio: 0,
     };
+    const columns: ColumnsType<DataType> = [
+        {
+            title: 'Stylist',
+            dataIndex: 'type',
+            key: 'type',
+            width: '50%',
+        },
+        {
+            title: 'Number of reservations (Weekly)',
+            dataIndex: 'value',
+            key: 'value',
+            width: '50%'
+        }
+    ];
     return (
         <>
             <Pie {...pie }/>
             <br/>
             <Bar {...bar} />
+            <Table columns={columns} dataSource={barData} style={{padding:10}} pagination={{ defaultPageSize: 10}}/>
+            
             </>
     )
 }

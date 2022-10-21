@@ -154,7 +154,7 @@ function Admin() {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
-            width: '20%',
+            width: '30%',
             sorter: (a, b) => a.email.localeCompare(b.email),
             sortDirections: ['descend', 'ascend'],
         },
@@ -163,16 +163,16 @@ function Admin() {
             dataIndex: 'joinDate',
             key: 'joinDate',
         },
-        {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button type="primary" onClick={()=>showModalUpdate(record)}>Update</Button>
-                    <Button type="dashed" danger onClick={()=>showDeleteConfirm(record)}>Delete</Button>
-                </Space>
-            ),
-        },
+        // {
+        //     title: 'Action',
+        //     key: 'action',
+        //     render: (_, record) => (
+        //         <Space size="middle">
+        //             <Button type="primary" onClick={()=>showModalUpdate(record)}>Update</Button>
+        //             <Button type="dashed" danger onClick={()=>showDeleteConfirm(record)}>Delete</Button>
+        //         </Space>
+        //     ),
+        // },
     ];
     return (
         <div className="client_table">
@@ -220,11 +220,13 @@ function Admin() {
                     ref={formRef}
                     form={form}
                 >
+                    {action === 'update' ?
+                    <>
                     <Form.Item
                         label="First Name"
                         name="firstName"
                         validateTrigger="onSubmit"
-                        rules={[{ required: true, message: 'Please input your First Name!' }]}
+                        rules={[{ required: true, message: 'Please input your first name!' }]}
                     >
                         <Input />
                     </Form.Item>
@@ -232,10 +234,11 @@ function Admin() {
                         label="Last Name"
                         name="lastName"
                         validateTrigger="onSubmit"
-                        rules={[{ required: true, message: 'Please input your Last Name!' }]}
+                        rules={[{ required: true, message: 'Please input your last name!' }]}
                     >
                         <Input />
                     </Form.Item>
+                    </>:''}
                     <Form.Item
                         label="Email"
                         name="email"
@@ -243,18 +246,6 @@ function Admin() {
                         rules={[{ required: true, message: 'Please input your Email!', type: 'email' }]}
                     >
                         <Input />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Join Date"
-                        name="joinDate"
-                        validateTrigger="onSubmit"
-                        rules={[{ required: true, message: 'Please input your join date!', type: 'date' }]}
-                    >
-                        <DatePicker disabledDate={(current) => {
-                            let customDate = moment().format("YYYY-MM-DD");
-                            return current && current < moment(customDate, "YYYY-MM-DD");
-                        }}/>
                     </Form.Item>
                     <Form.Item wrapperCol={{ span: 24 }}>
                         <Button id="login" type="primary" htmlType="submit">

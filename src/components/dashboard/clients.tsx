@@ -183,7 +183,7 @@ function Clients() {
                 />
             </Row>
             <br/>
-            <Table columns={columns} dataSource={dataSource} style={{overflow:"scroll"}}/>
+            <Table columns={columns} dataSource={dataSource} style={{overflow:"scroll"}} pagination={{ defaultPageSize: 10}}/>
             <Modal title={action === 'create' ? "New client" : "Update client"} visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={false} >
                 <Form
                     name="basic"
@@ -216,7 +216,7 @@ function Clients() {
                     <Form.Item
                         label="Email"
                         name="email"
-                        validateTrigger="onSubmit"
+                        validateTrigger={action === 'create' ? 'onSubmit':'onChange'}
                         rules={[{ required: true, message: 'Please input correct Email!', type: 'email' }]}
                     >
                         <Input />

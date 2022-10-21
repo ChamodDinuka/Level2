@@ -233,6 +233,14 @@ function Reservation() {
     };
     const disabledHours =() => {
         const hours = [] as any;
+        let currentTime = new Date().getHours();
+        let currentDate = moment(new Date()).format('YYYY-MM-DD')
+
+        if(currentTime >= 8 && currentDate == selectedDate){
+            for(let min = 8;min <= currentTime;min++){
+                hours.push(min)
+            }
+        }
     
         for (let min = 0,max=23; min < 8; min++,max--) {
           if(max >= 18){

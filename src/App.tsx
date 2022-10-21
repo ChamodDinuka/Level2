@@ -18,6 +18,7 @@ function hasJWT() {
     let tokenExp = new Date(JSON.parse(jsonPayload).exp * 1000)
     let dateNow = new Date();
     tokenExp < dateNow ? flag = false : flag = true
+    console.log(tokenExp)
 
   } else {
     flag = false
